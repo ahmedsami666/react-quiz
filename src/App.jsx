@@ -1,15 +1,17 @@
-import Header from './Header'
-import MainElement from './MainElement'
+import Header from './components/Header'
+import MainElement from './components/MainElement'
 import "./index.css"
 import { useEffect, useReducer } from 'react'
-import Loader from "./Loader"
-import Error from './Error'
-import StartScreen from './StartScreen'
+import Loader from "./components/Loader"
+import Error from './components/Error'
+import StartScreen from './components/StartScreen'
+import Question from './components/Question'
 
 const initialState = {
     questions: [],
     // loading, error, ready, active, finished
-    status: 'loading'
+    status: 'loading',
+    index: 0
 }
 const reducer = (state, action) => {
     switch (action.type) {
@@ -17,13 +19,15 @@ const reducer = (state, action) => {
             return {...state, questions: action.payload, status: "ready"}
         case 'dataFaild':
             return {...state, status: 'error'}
+        case 'start': 
+            return {...state, status: 'active'}
         default:
             throw new Error("Unknown action")
     }
 }
 export default function App () {
     const [state, dispatch] = useReducer(reducer, initialState)
-    const {questions, status} = state
+    const {questions, status, index} = state
     const numQuestions = questions.length
     useEffect(() => {
         fetch("http://localhost:8000/questions")
@@ -37,7 +41,8 @@ export default function App () {
             <MainElement>
                 {status === 'loading' && <Loader />}
                 {status === 'error' && <Error />}
-                {status === 'ready' && <StartScreen numQuestions={numQuestions} />}
+                {status === 'ready' && <StartScreen numQuestions={numQuestions} dispatch={dispatch} />}
+                {status === 'active' && <Question question={questions[index]}/>}
             </MainElement>
         </div>
     )
