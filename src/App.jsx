@@ -9,6 +9,8 @@ import Question from './components/Question'
 import NextButton from './components/NextButton'
 import Progress from './components/Progress'
 import FinishedScreen from './components/FinishedScreen'
+import Timer from './components/Timer'
+import Footer from './components/Footer'
 
 const initialState = {
     questions: [],
@@ -16,7 +18,8 @@ const initialState = {
     status: 'loading',
     index: 0,
     answer: null,
-    points: 0
+    points: 0,
+    secondsRemaining: null
 }
 const reducer = (state, action) => {
     switch (action.type) {
@@ -25,7 +28,7 @@ const reducer = (state, action) => {
         case 'dataFaild':
             return { ...state, status: 'error' }
         case 'start':
-            return { ...state, status: 'active' }
+            return { ...state, status: 'active', secondsRemaining: state.questions.length * 10 }
         case 'newAnswer':
             const question = state.questions.at(state.index)
             return {
@@ -39,13 +42,16 @@ const reducer = (state, action) => {
             return {...state, status: 'finished'}
         case 'restart':
             return {...initialState, questions: state.questions, status: 'ready'}
+        case 'tick': 
+            
+            return {...state, secondsRemaining: state.secondsRemaining - 1, status: state.secondsRemaining === 0 ? 'finished' : state.status}
         default:
             throw new Error("Unknown action")
     }
 }
 export default function App() {
     const [state, dispatch] = useReducer(reducer, initialState)
-    const { questions, status, index, answer, points } = state
+    const { questions, status, index, answer, points, secondsRemaining } = state
 
     const numQuestions = questions.length
     const maxPoints = questions.reduce((prev, curr) => prev + curr.points, 0)
@@ -67,7 +73,10 @@ export default function App() {
                     <>
                         <Progress index={index} numQuestions={numQuestions} points={points} maxPoints={maxPoints} />
                         <Question question={questions[index]} dispatch={dispatch} answer={answer} />
-                        <NextButton dispatch={dispatch} answer={answer} numQuestions={numQuestions} index={index} />
+                        <Footer>
+                            <Timer dispatch={dispatch} secondsRemaining={secondsRemaining} />
+                            <NextButton dispatch={dispatch} answer={answer} numQuestions={numQuestions} index={index} />
+                        </Footer>
                     </>}
                 {status === 'finished' && <FinishedScreen points={points} maxPoints={maxPoints} dispatch={dispatch} />}
             </MainElement>
